@@ -1,5 +1,10 @@
+import { auth } from "@/lib/better-auth/auth";
+import { headers } from "next/headers";
+import { getWatchlistSymbolsByEmail } from "@/lib/actions/watchlist.actions";
+
 import TradingViewWidget from "@/components/TradingViewWidget";
 import WatchlistButton from "@/components/WatchlistButton";
+
 import {
   SYMBOL_INFO_WIDGET_CONFIG,
   CANDLE_CHART_WIDGET_CONFIG,
@@ -9,15 +14,42 @@ import {
   COMPANY_FINANCIALS_WIDGET_CONFIG,
 } from "@/lib/constants";
 
-export default async function StockDetails({ params }: StockDetailsPageProps) {
+export default async function StockDetails({
+  params,
+}: StockDetailsPageProps) {
+  // Get the stock symbol from the URL
   const { symbol } = await params;
-  const scriptUrl = `https://s3.tradingview.com/external-embedding/embed-widget-`;
+
+  // Get logged-in user session
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  // User must be logged in
+  if (!session?.user) {
+    return null;
+  }
+
+  // Get user's existing watchlist
+  const watchlistSymbols = await getWatchlistSymbolsByEmail(
+    session.user.email
+  );
+
+  // Check whether this stock is already in watchlist
+  const isInWatchlist = watchlistSymbols.includes(
+    symbol.toUpperCase()
+  );
+
+  const scriptUrl =
+    "https://s3.tradingview.com/external-embedding/embed-widget-";
 
   return (
     <div className="flex min-h-screen p-4 md:p-6 lg:p-8">
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-        {/* Left column */}
+
+        {/* LEFT COLUMN */}
         <div className="flex flex-col gap-6">
+
           <TradingViewWidget
             scriptUrl={`${scriptUrl}symbol-info.js`}
             config={SYMBOL_INFO_WIDGET_CONFIG(symbol)}
@@ -37,12 +69,20 @@ export default async function StockDetails({ params }: StockDetailsPageProps) {
             className="custom-chart"
             height={600}
           />
+
         </div>
 
-        {/* Right column */}
+        {/* RIGHT COLUMN */}
         <div className="flex flex-col gap-6">
+
+          {/* WATCHLIST BUTTON */}
           <div className="flex items-center justify-between">
-            <WatchlistButton symbol={symbol.toUpperCase()} company={symbol.toUpperCase()} isInWatchlist={false} />
+            <WatchlistButton
+              symbol={symbol.toUpperCase()}
+              company={symbol.toUpperCase()}
+              isInWatchlist={isInWatchlist}
+              email={session.user.email}
+            />
           </div>
 
           <TradingViewWidget
@@ -62,6 +102,7 @@ export default async function StockDetails({ params }: StockDetailsPageProps) {
             config={COMPANY_FINANCIALS_WIDGET_CONFIG(symbol)}
             height={464}
           />
+
         </div>
       </section>
     </div>
