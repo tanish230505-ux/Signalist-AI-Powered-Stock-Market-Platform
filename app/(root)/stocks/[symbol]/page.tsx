@@ -1,7 +1,8 @@
+
 import { auth } from "@/lib/better-auth/auth";
 import { headers } from "next/headers";
 import { getWatchlistSymbolsByEmail } from "@/lib/actions/watchlist.actions";
-
+import AIStockAnalysis from "@/components/AIStockAnalysis";
 import TradingViewWidget from "@/components/TradingViewWidget";
 import WatchlistButton from "@/components/WatchlistButton";
 
@@ -49,7 +50,6 @@ export default async function StockDetails({
 
         {/* LEFT COLUMN */}
         <div className="flex flex-col gap-6">
-
           <TradingViewWidget
             scriptUrl={`${scriptUrl}symbol-info.js`}
             config={SYMBOL_INFO_WIDGET_CONFIG(symbol)}
@@ -69,7 +69,6 @@ export default async function StockDetails({
             className="custom-chart"
             height={600}
           />
-
         </div>
 
         {/* RIGHT COLUMN */}
@@ -85,24 +84,29 @@ export default async function StockDetails({
             />
           </div>
 
+          {/* AI STOCK ANALYSIS */}
+          <AIStockAnalysis symbol={symbol} />
+
+          {/* TECHNICAL ANALYSIS */}
           <TradingViewWidget
             scriptUrl={`${scriptUrl}technical-analysis.js`}
             config={TECHNICAL_ANALYSIS_WIDGET_CONFIG(symbol)}
             height={400}
           />
 
+          {/* COMPANY PROFILE */}
           <TradingViewWidget
             scriptUrl={`${scriptUrl}company-profile.js`}
             config={COMPANY_PROFILE_WIDGET_CONFIG(symbol)}
             height={440}
           />
 
+          {/* COMPANY FINANCIALS */}
           <TradingViewWidget
             scriptUrl={`${scriptUrl}financials.js`}
             config={COMPANY_FINANCIALS_WIDGET_CONFIG(symbol)}
             height={464}
           />
-
         </div>
       </section>
     </div>
